@@ -1,0 +1,238 @@
+{
+  "transactions": [
+    {
+      "id": "txn-1",
+      "payee": "Pret A Manger",
+      "category": "Dining Out",
+      "account": "Chase Sapphire",
+      "type": "Expense",
+      "amount": 18.75,
+      "converted": 18.75,
+      "currency": "USD",
+      "date": "2025-09-20T21:56:58Z",
+      "status": "confirmed"
+    },
+    {
+      "id": "txn-2",
+      "payee": "Spotify",
+      "category": "Subscriptions",
+      "account": "Amex Gold",
+      "type": "Expense",
+      "amount": 9.99,
+      "converted": 9.99,
+      "currency": "USD",
+      "date": "2025-09-17T21:56:58Z",
+      "status": "confirmed"
+    },
+    {
+      "id": "txn-3",
+      "payee": "Payroll",
+      "category": "Salary",
+      "account": "HSBC Checking",
+      "type": "Income",
+      "amount": 4200,
+      "converted": 4200,
+      "currency": "USD",
+      "date": "2025-09-02T00:00:00Z",
+      "status": "confirmed"
+    },
+    {
+      "id": "txn-4",
+      "payee": "Tesco",
+      "category": "Groceries",
+      "account": "HSBC UK",
+      "type": "Expense",
+      "amount": 55.62,
+      "converted": 70.64,
+      "currency": "GBP",
+      "date": "2025-09-15T21:56:58Z",
+      "status": "confirmed"
+    },
+    {
+      "id": "txn-5",
+      "payee": "Japan Airlines",
+      "category": "Travel",
+      "account": "Amex Platinum",
+      "type": "Expense",
+      "amount": 65000,
+      "converted": 464.29,
+      "currency": "JPY",
+      "date": "2025-08-01T00:00:00Z",
+      "status": "confirmed"
+    }
+  ],
+  "budgets": [
+    {
+      "id": "bdg-1",
+      "category": "Dining Out",
+      "period": "monthly",
+      "spent": 185,
+      "limit": 300,
+      "currency": "USD",
+      "startDate": "2025-09-01T00:00:00Z",
+      "endDate": "2025-09-30T23:59:59Z",
+      "autoCalculated": true,
+      "lastRecalculated": "2025-09-23T21:56:58Z"
+    },
+    {
+      "id": "bdg-2",
+      "category": "Groceries",
+      "period": "monthly",
+      "spent": 420,
+      "limit": 600,
+      "currency": "USD",
+      "startDate": "2025-09-01T00:00:00Z",
+      "endDate": "2025-09-30T23:59:59Z",
+      "autoCalculated": true,
+      "lastRecalculated": "2025-09-23T21:56:58Z"
+    },
+    {
+      "id": "bdg-3",
+      "category": "Travel",
+      "period": "quarterly",
+      "spent": 980,
+      "limit": 1500,
+      "currency": "USD",
+      "startDate": "2025-08-01T00:00:00Z",
+      "endDate": "2025-11-30T23:59:59Z",
+      "autoCalculated": false,
+      "lastRecalculated": "2025-09-23T21:56:58Z"
+    }
+  ],
+  "drafts": [
+    {
+      "id": "draft-1",
+      "source": "email",
+      "detail": "Pret A Manger, Dining Out, USD 12.40",
+      "receivedAt": "2025-09-22T21:56:58Z"
+    },
+    {
+      "id": "draft-2",
+      "source": "upload",
+      "detail": "Starbucks, Coffee, USD 5.10",
+      "receivedAt": "2025-09-21T21:56:58Z"
+    },
+    {
+      "id": "draft-3",
+      "source": "webhook",
+      "detail": "Tesco, Groceries, GBP 23.50",
+      "receivedAt": "2025-09-19T21:56:58Z"
+    }
+  ],
+  "templates": [
+    {
+      "id": "tpl-1",
+      "name": "Baseline essentials",
+      "category": "Groceries",
+      "period": "monthly",
+      "limit": 600,
+      "currency": "USD"
+    },
+    {
+      "id": "tpl-2",
+      "name": "Commuter lunches",
+      "category": "Dining Out",
+      "period": "weekly",
+      "limit": 80,
+      "currency": "USD"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "scn-1",
+      "name": "Summer travel plan",
+      "adjustments": [
+        {
+          "budgetId": "bdg-3",
+          "delta": 200
+        },
+        {
+          "budgetId": "bdg-1",
+          "delta": -50
+        }
+      ],
+      "createdAt": "2025-09-11T21:56:58Z",
+      "updatedAt": "2025-09-20T21:56:58Z",
+      "isDraft": false
+    }
+  ],
+  "categoryHints": {
+    "pret a manger": [
+      "Dining Out",
+      "Coffee"
+    ],
+    "starbucks": [
+      "Dining Out",
+      "Coffee"
+    ],
+    "tesco": [
+      "Groceries"
+    ],
+    "spotify": [
+      "Subscriptions",
+      "Entertainment"
+    ],
+    "netflix": [
+      "Subscriptions"
+    ],
+    "uber": [
+      "Transport",
+      "Travel"
+    ],
+    "payroll": [
+      "Salary"
+    ]
+  },
+  "posts": [
+    {
+      "id": "post-1",
+      "title": "How to build a mindful spending routine",
+      "slug": "mindful-spending-routine",
+      "excerpt": "A five-step approach to reviewing purchases, spotting drift, and course-correcting without sacrificing joy.",
+      "content": "<p>Zenith Finance brings every account together so you can review weekly trends and make confident budget tweaks. Start with a five-minute Friday ritual: tag new transactions, glance at nudges, and adjust any guardrails that feel tight. When travel or gifting season hits, clone a scenario to plan the extra burn before it surprises you.</p>",
+      "coverImage": null,
+      "publishedAt": "2025-09-18T21:56:58Z",
+      "updatedAt": "2025-09-18T21:56:58Z",
+      "authorId": "user-1",
+      "externalId": null
+    },
+    {
+      "id": "post-2",
+      "title": "Template library: three budgets to stabilize cash flow",
+      "slug": "template-library-cash-flow",
+      "excerpt": "Dial in everyday categories with reusable templates covering essentials, subscriptions, and commuter lunches.",
+      "content": "<p>Budgets feel less intimidating when you can jump-start them from a proven template. Start with Baseline Essentials to cover groceries and household supplies, then layer in Commuter Lunches if you notice midday spending creep. Each template ships with sensible limits that you can tailor per currency.</p>",
+      "coverImage": null,
+      "publishedAt": "2025-09-11T21:56:58Z",
+      "updatedAt": "2025-09-15T21:56:58Z",
+      "authorId": "user-1",
+      "externalId": null
+    },
+    {
+      "id": "post-3",
+      "title": "Playbook: ingesting drafts without derailing budgets",
+      "slug": "playbook-ingesting-drafts",
+      "excerpt": "Turn email, upload, or webhook drafts into confirmed transactions with one review queue and automatic budget sync.",
+      "content": "<p>Draft ingestion keeps your ledger tidy while letting you spot duplicates. Confirm or ignore individually, or run Confirm All after skimming the queue. Every confirmation re-runs USD budgets so alerts stay honest.</p>",
+      "coverImage": null,
+      "publishedAt": "2025-09-03T21:56:58Z",
+      "updatedAt": "2025-09-21T21:56:58Z",
+      "authorId": "user-1",
+      "externalId": null
+    }
+  ],
+  "users": [
+    {
+      "id": "user-1",
+      "name": "Avery Admin",
+      "email": "admin@zenith.local",
+      "role": "admin",
+      "passwordHash": "4abfeefc82d3a1342829e269d9354b98:6832deb604bbaa910bb6e3cfd1fdf84ef4b4e8b8e3a5b5d478710375af266ef6f43331bd615b054ae61d4174d1f823ea845146b3dfb92202f35736b755ab4e1e",
+      "createdAt": "2025-08-24T21:56:58Z",
+      "updatedAt": "2025-09-22T21:56:58Z"
+    }
+  ],
+  "meta": {
+    "lastUpdated": "2025-09-23T21:56:58Z"
+  }
+}
