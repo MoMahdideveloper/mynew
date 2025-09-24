@@ -167,7 +167,14 @@ export async function deleteBudgetAction(formData: FormData) {
 export async function recalcBudgetAction(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   if (!id) throw new Error("Budget id required");
-  await recalcAllBudgets();
+  const db = await readDatabase();
+  const index = db.budgets.findIndex((budget) => budget.id === id);
+  if (index === -1) {
+    throw new Error("Budget not found");
+  }
+  const updated = await recalcBudgetSpending({ ...db.budgets[index] }, db);
+  db.budgets[index] = updated;
+  await writeDatabase(db);
   await revalidateFinancePaths();
 }
 
