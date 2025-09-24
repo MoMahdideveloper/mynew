@@ -152,9 +152,37 @@
         }
       ],
       "createdAt": "2025-09-11T21:56:58Z",
-      "updatedAt": "2025-09-20T21:56:58Z"
+      "updatedAt": "2025-09-20T21:56:58Z",
+      "status": "active"
     }
   ],
+  "categoryHints": {
+    "pret a manger": [
+      "Dining Out",
+      "Coffee"
+    ],
+    "starbucks": [
+      "Dining Out",
+      "Coffee"
+    ],
+    "tesco": [
+      "Groceries"
+    ],
+    "spotify": [
+      "Subscriptions",
+      "Entertainment"
+    ],
+    "netflix": [
+      "Subscriptions"
+    ],
+    "uber": [
+      "Transport",
+      "Travel"
+    ],
+    "payroll": [
+      "Salary"
+    ]
+  },
   "meta": {
     "lastUpdated": "2025-09-23T21:56:58Z"
   }

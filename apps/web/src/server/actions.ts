@@ -68,6 +68,32 @@ const templateFormSchema = z.object({
   currency: currencyEnum,
 });
 
+const budgetLimitSchema = z.object({
+  id: z.string().min(1),
+  limit: z.string().min(1),
+});
+
+const scenarioAdjustmentsSchema = z.object({
+  id: z.string().min(1),
+  adjustments: z
+    .string()
+    .transform((value) => {
+      let parsed: Array<{ budgetId: string; delta: number }>;
+      try {
+        parsed = JSON.parse(value) as Array<{ budgetId: string; delta: number }>;
+      } catch {
+        throw new Error("Invalid adjustments payload");
+      }
+      if (!Array.isArray(parsed)) {
+        throw new Error("Adjustments must be an array");
+      }
+      return parsed.map((item) => ({
+        budgetId: String(item.budgetId),
+        delta: Number.isNaN(Number(item.delta)) ? 0 : Number(item.delta),
+      }));
+    }),
+});
+
 function parseAmount(value: string, currency: string) {
   const parsed = parseAmountInput(value);
   if (parsed === null) {
@@ -90,6 +116,24 @@ export async function createTransactionAction(formData: FormData) {
     notes: values.notes ?? undefined,
   });
   await recalcAllBudgets();
+  await revalidateFinancePaths();
+}
+
+export async function updateBudgetLimitAction(formData: FormData) {
+  const values = budgetLimitSchema.parse(Object.fromEntries(formData.entries()));
+  const db = await readDatabase();
+  const index = db.budgets.findIndex((budget) => budget.id === values.id);
+  if (index === -1) {
+    throw new Error("Budget not found");
+  }
+  const budget = db.budgets[index];
+  const limit = parseAmount(values.limit, budget.currency);
+  db.budgets[index] = {
+    ...budget,
+    limit,
+    lastRecalculated: new Date().toISOString(),
+  };
+  await writeDatabase(db);
   await revalidateFinancePaths();
 }
 
@@ -225,7 +269,28 @@ export async function createScenarioAction(formData: FormData) {
     adjustments: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    status: "draft",
   });
+  await writeDatabase(db);
+  await revalidatePath("/budgets");
+}
+
+export async function cloneScenarioAction(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+  if (!id) throw new Error("Scenario id required");
+  const db = await readDatabase();
+  const source = db.scenarios.find((scenario) => scenario.id === id);
+  if (!source) throw new Error("Scenario not found");
+  const now = new Date().toISOString();
+  const clone: BudgetScenario = {
+    ...source,
+    id: crypto.randomUUID(),
+    name: source.name.includes("Draft") ? source.name : `${source.name} Draft`,
+    status: "draft",
+    createdAt: now,
+    updatedAt: now,
+  };
+  db.scenarios.push(clone);
   await writeDatabase(db);
   await revalidatePath("/budgets");
 }
@@ -241,6 +306,37 @@ export async function renameScenarioAction(formData: FormData) {
   db.scenarios = db.scenarios.map((scenario) =>
     scenario.id === values.id
       ? { ...scenario, name: values.name, updatedAt: new Date().toISOString() }
+      : scenario,
+  );
+  await writeDatabase(db);
+  await revalidatePath("/budgets");
+}
+
+export async function saveScenarioAdjustmentsAction(formData: FormData) {
+  const values = scenarioAdjustmentsSchema.parse(Object.fromEntries(formData.entries()));
+  const db = await readDatabase();
+  db.scenarios = db.scenarios.map((scenario) => {
+    if (scenario.id !== values.id) return scenario;
+    return {
+      ...scenario,
+      adjustments: values.adjustments.map((adjustment) => ({
+        budgetId: adjustment.budgetId,
+        delta: adjustment.delta,
+      })),
+      updatedAt: new Date().toISOString(),
+    };
+  });
+  await writeDatabase(db);
+  await revalidatePath("/budgets");
+}
+
+export async function promoteScenarioAction(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+  if (!id) throw new Error("Scenario id required");
+  const db = await readDatabase();
+  db.scenarios = db.scenarios.map((scenario) =>
+    scenario.id === id
+      ? { ...scenario, status: "active", updatedAt: new Date().toISOString() }
       : scenario,
   );
   await writeDatabase(db);

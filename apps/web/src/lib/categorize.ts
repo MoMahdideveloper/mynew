@@ -1,4 +1,4 @@
-const PAYEE_CATEGORY_MAP: Record<string, string[]> = {
+export const BASE_CATEGORY_HINTS: Record<string, string[]> = {
   "pret a manger": ["Dining Out", "Coffee"],
   starbucks: ["Dining Out", "Coffee"],
   tesco: ["Groceries"],
@@ -8,25 +8,37 @@ const PAYEE_CATEGORY_MAP: Record<string, string[]> = {
   payroll: ["Salary"],
 };
 
-export function suggestCategories(payee: string, current?: string): string[] {
-  if (!payee) return [];
-  const normalized = payee.toLowerCase().trim();
-  const candidates = PAYEE_CATEGORY_MAP[normalized] ?? [];
-  const unique = candidates.filter(
-    (category, index) => candidates.indexOf(category) === index,
-  );
-  return unique.filter((category) => !current || category !== current).slice(0, 3);
+export interface CategorySuggestionSources {
+  learned?: Record<string, string[]>;
+  historical?: Record<string, string[]>;
 }
 
-export function teachCategory(payee: string, category: string) {
-  if (!payee || !category) return;
-  const normalized = payee.toLowerCase().trim();
-  const list = PAYEE_CATEGORY_MAP[normalized] ?? [];
-  if (!list.includes(category)) {
-    PAYEE_CATEGORY_MAP[normalized] = [category, ...list].slice(0, 5);
+export function normalizePayee(payee: string) {
+  return payee.toLowerCase().trim();
+}
+
+function pushUnique(list: string[], value: string | undefined) {
+  if (!value) return;
+  if (!list.includes(value)) {
+    list.push(value);
   }
 }
 
-export function getPayeeCategoryMap() {
-  return PAYEE_CATEGORY_MAP;
+export function suggestCategories(
+  payee: string,
+  current?: string,
+  sources: CategorySuggestionSources = {},
+): string[] {
+  if (!payee) return [];
+  const normalized = normalizePayee(payee);
+  const learned = sources.learned?.[normalized] ?? [];
+  const historical = sources.historical?.[normalized] ?? [];
+  const base = BASE_CATEGORY_HINTS[normalized] ?? [];
+  const combined: string[] = [];
+  learned.forEach((category) => pushUnique(combined, category));
+  historical.forEach((category) => pushUnique(combined, category));
+  base.forEach((category) => pushUnique(combined, category));
+  return combined
+    .filter((category) => !current || category !== current)
+    .slice(0, 3);
 }

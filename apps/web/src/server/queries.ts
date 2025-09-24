@@ -1,5 +1,15 @@
 import { revalidatePath } from "next/cache";
-import { endOfDay, isAfter, isBefore, isWithinInterval, parseISO, startOfDay } from "date-fns";
+import {
+  addDays,
+  endOfDay,
+  isAfter,
+  isBefore,
+  isWithinInterval,
+  parseISO,
+  startOfDay,
+  subDays,
+  differenceInCalendarDays,
+} from "date-fns";
 import {
   mockAccounts,
   mockAlertRules,
@@ -18,6 +28,7 @@ import {
   TransactionType,
 } from "@/types";
 import { convertToUSD, formatCurrency } from "@/lib/fx";
+import { normalizePayee } from "@/lib/categorize";
 import { readDatabase, writeDatabase } from "@/server/fsdb";
 
 const BACKEND_URL = process.env.BACKEND_URL ?? process.env.NEXT_PUBLIC_BACKEND_URL;
@@ -74,6 +85,44 @@ export async function getTransactions(filters: TransactionFilterParams = {}) {
   const db = await readDatabase();
   const filtered = db.transactions.filter((txn) => matchesFilter(txn, filters));
   return filtered;
+}
+
+export async function getCategorySuggestionSources() {
+  const db = await readDatabase();
+  const learned = db.categoryHints ?? {};
+  const lookback = subDays(new Date(), 90);
+  const historyCounters = new Map<string, Map<string, number>>();
+
+  db.transactions.forEach((txn) => {
+    const date = parseISO(txn.date);
+    if (isBefore(date, lookback)) return;
+    const normalized = normalizePayee(txn.payee);
+    if (!historyCounters.has(normalized)) {
+      historyCounters.set(normalized, new Map());
+    }
+    const counter = historyCounters.get(normalized)!;
+    counter.set(txn.category, (counter.get(txn.category) ?? 0) + 1);
+  });
+
+  const historical: Record<string, string[]> = {};
+  historyCounters.forEach((counter, payee) => {
+    const ordered = Array.from(counter.entries())
+      .sort((a, b) => {
+        if (b[1] === a[1]) {
+          return a[0].localeCompare(b[0]);
+        }
+        return b[1] - a[1];
+      })
+      .map(([category]) => category);
+    if (ordered.length) {
+      historical[payee] = ordered.slice(0, 5);
+    }
+  });
+
+  return {
+    learned,
+    historical,
+  };
 }
 
 export async function getSummary() {
@@ -229,15 +278,35 @@ const MONTHLY_FACTOR: Record<BudgetPeriod, number> = {
 };
 
 export function getPredictiveNudges(budgets: Budget[]) {
+  const today = new Date();
   const projections = budgets.map((budget) => {
     const ratio = budget.limit === 0 ? 0 : budget.spent / budget.limit;
     const projectedMonthly = budget.spent * (MONTHLY_FACTOR[budget.period] ?? 1);
     const status = getBudgetStatus(budget);
+    const start = parseISO(budget.startDate);
+    const end = parseISO(budget.endDate);
+    const elapsedDays = Math.max(1, differenceInCalendarDays(today, start) + 1);
+    const daysRemaining = Math.max(0, differenceInCalendarDays(end, today));
+    const dailyPace = elapsedDays > 0 ? budget.spent / elapsedDays : 0;
+    const remaining = budget.limit - budget.spent;
+    const projectedDaysToLimit =
+      dailyPace > 0 && remaining > 0
+        ? remaining / dailyPace
+        : remaining <= 0
+        ? 0
+        : Number.POSITIVE_INFINITY;
+    const forecastDate =
+      Number.isFinite(projectedDaysToLimit) && projectedDaysToLimit !== Number.POSITIVE_INFINITY
+        ? addDays(today, Math.ceil(projectedDaysToLimit))
+        : null;
     return {
       budget,
       ratio,
       projectedMonthly,
       status,
+      projectedDaysToLimit,
+      forecastDate,
+      daysRemaining,
     };
   });
   return projections
@@ -274,6 +343,7 @@ export async function importDatabase(payload: Partial<Database>) {
     drafts: payload.drafts ?? db.drafts,
     templates: payload.templates ?? db.templates,
     scenarios: payload.scenarios ?? db.scenarios,
+    categoryHints: payload.categoryHints ?? db.categoryHints,
     meta: {
       lastUpdated: new Date().toISOString(),
     },

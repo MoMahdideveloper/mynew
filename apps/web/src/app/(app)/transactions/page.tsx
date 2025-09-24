@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { createTransactionAction, deleteTransactionAction, updateTransactionAction } from "@/server/actions";
-import { getTransactions, summarizeTransactions } from "@/server/queries";
+import {
+  getCategorySuggestionSources,
+  getTransactions,
+  summarizeTransactions,
+} from "@/server/queries";
 import { TransactionType } from "@/types";
 import { formatCurrency } from "@/lib/fx";
 import { suggestCategories } from "@/lib/categorize";
@@ -20,7 +24,7 @@ export default async function TransactionsPage({
     from: typeof resolvedParams?.from === "string" ? resolvedParams?.from : undefined,
     to: typeof resolvedParams?.to === "string" ? resolvedParams?.to : undefined,
   };
-  const [transactions, metrics] = await Promise.all([
+  const [transactions, metrics, suggestionSources] = await Promise.all([
     getTransactions({
       type: filters.type === "All" ? undefined : filters.type,
       q: filters.q,
@@ -33,6 +37,7 @@ export default async function TransactionsPage({
       from: filters.from,
       to: filters.to,
     }),
+    getCategorySuggestionSources(),
   ]);
   const search = new URLSearchParams();
   if (filters.type && filters.type !== "All") search.set("type", filters.type);
@@ -154,7 +159,7 @@ export default async function TransactionsPage({
             </thead>
             <tbody className="divide-y divide-border/60 text-sm">
               {transactions.map((txn) => {
-                const suggestions = suggestCategories(txn.payee, txn.category);
+                const suggestions = suggestCategories(txn.payee, txn.category, suggestionSources);
                 return (
                   <tr key={txn.id} className="align-top">
                     <td className="px-4 py-3 text-ink-subtle">

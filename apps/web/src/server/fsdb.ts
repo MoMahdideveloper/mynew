@@ -2,6 +2,7 @@ import { promises as fs } from "fs";
 import { nanoid } from "nanoid";
 import path from "path";
 import { defaultDatabase } from "@/data/mock-data";
+import { normalizePayee } from "@/lib/categorize";
 import {
   Budget,
   BudgetScenario,
@@ -42,6 +43,7 @@ export async function readDatabase(): Promise<Database> {
     drafts: parsed.drafts ?? [],
     templates: parsed.templates ?? [],
     scenarios: parsed.scenarios ?? [],
+    categoryHints: parsed.categoryHints ?? {},
   };
 }
 
@@ -54,6 +56,16 @@ export async function writeDatabase(db: Database) {
     },
   } satisfies Database;
   await fs.writeFile(DB_PATH, JSON.stringify(updated, null, 2));
+}
+
+function rememberCategoryHint(db: Database, payee: string, category: string | undefined) {
+  if (!payee || !category) return;
+  const normalized = normalizePayee(payee);
+  if (!normalized) return;
+  const existing = db.categoryHints[normalized] ?? [];
+  if (!existing.includes(category)) {
+    db.categoryHints[normalized] = [category, ...existing].slice(0, 5);
+  }
 }
 
 type TransactionInput = Omit<
@@ -75,6 +87,7 @@ export async function createTransaction(payload: TransactionInput) {
     status: payload.status ?? "confirmed",
   };
   db.transactions = [txn, ...db.transactions];
+  rememberCategoryHint(db, txn.payee, txn.category);
   await writeDatabase(db);
   return txn;
 }
@@ -103,6 +116,7 @@ export async function updateTransaction(
     if (patch.type) {
       updated.type = patch.type;
     }
+    rememberCategoryHint(db, updated.payee, updated.category);
     return updated;
   });
   await writeDatabase(db);
@@ -154,6 +168,7 @@ export async function confirmDraft(draftId: string) {
   const txn = draftToTransaction(draft);
   db.transactions = [txn, ...db.transactions];
   db.drafts = db.drafts.filter((item) => item.id !== draftId);
+  rememberCategoryHint(db, txn.payee, txn.category);
   await writeDatabase(db);
   return txn;
 }
@@ -163,6 +178,7 @@ export async function confirmAllDrafts() {
   const created: Transaction[] = db.drafts.map((draft) => draftToTransaction(draft));
   db.transactions = [...created, ...db.transactions];
   db.drafts = [];
+  created.forEach((txn) => rememberCategoryHint(db, txn.payee, txn.category));
   await writeDatabase(db);
   return created;
 }

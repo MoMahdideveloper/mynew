@@ -11,6 +11,7 @@ import {
   IngestionDraft,
   Transaction,
 } from "@/types";
+import { BASE_CATEGORY_HINTS } from "@/lib/categorize";
 
 const today = new Date();
 const monthStart = startOfMonth(today);
@@ -172,6 +173,7 @@ export const mockScenarios: BudgetScenario[] = [
     ],
     createdAt: formatISO(subDays(today, 12)),
     updatedAt: formatISO(subDays(today, 3)),
+    status: "active",
   },
 ];
 
@@ -231,6 +233,7 @@ export const defaultDatabase: Database = {
   drafts: baseDrafts,
   templates: mockTemplates,
   scenarios: mockScenarios,
+  categoryHints: Object.fromEntries(Object.entries(BASE_CATEGORY_HINTS)),
   meta: {
     lastUpdated: formatISO(today),
   },

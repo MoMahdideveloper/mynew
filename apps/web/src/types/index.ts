@@ -59,7 +59,10 @@ export interface BudgetScenario {
   adjustments: ScenarioAdjustment[];
   createdAt: string;
   updatedAt: string;
+  status?: "active" | "draft";
 }
+
+export type PayeeCategoryHints = Record<string, string[]>;
 
 export interface Database {
   transactions: Transaction[];
@@ -67,6 +70,7 @@ export interface Database {
   drafts: IngestionDraft[];
   templates: BudgetTemplate[];
   scenarios: BudgetScenario[];
+  categoryHints: PayeeCategoryHints;
   meta: {
     lastUpdated: string;
   };
