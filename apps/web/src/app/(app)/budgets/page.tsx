@@ -1,14 +1,11 @@
 import { endOfMonth, formatISO, startOfMonth } from "date-fns";
 import {
-  addTemplateAction,
-  createScenarioAction,
   deleteBudgetAction,
   deleteScenarioAction,
   deleteTemplateAction,
   recalcAllBudgetsAction,
   recalcBudgetAction,
-  renameScenarioAction,
-  saveBudgetAction,
+  saveBudgetFormAction,
 } from "@/server/actions";
 import {
   getBudgets,
@@ -20,7 +17,11 @@ import {
   formatBudgetRange,
 } from "@/server/queries";
 import { BudgetForm } from "@/components/budget-form";
+import { TemplateCreateForm } from "@/components/template-create-form";
+import { ScenarioCreateForm } from "@/components/scenario-create-form";
+import { ScenarioRenameForm } from "@/components/scenario-rename-form";
 import { formatCurrency } from "@/lib/fx";
+import { FormSubmitButton } from "@/components/form-submit-button";
 
 const MONTHLY_FACTOR = {
   weekly: 52 / 12,
@@ -52,11 +53,16 @@ export default async function BudgetsPage() {
       return acc + adjustment.delta * (MONTHLY_FACTOR[target.period] ?? 1);
     }, 0);
     const after = baseMonthlyBurn + adjustmentTotal;
+    const maxValue = Math.max(baseMonthlyBurn, after, 1);
     return {
       ...scenario,
       before: baseMonthlyBurn,
       after,
       delta: after - baseMonthlyBurn,
+      chart: {
+        before: Math.min((baseMonthlyBurn / maxValue) * 100, 100),
+        after: Math.min((after / maxValue) * 100, 100),
+      },
     };
   });
 
@@ -73,14 +79,30 @@ export default async function BudgetsPage() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-lg font-semibold text-ink">Active budgets</h2>
           <form action={recalcAllBudgetsAction}>
-            <button className="rounded-lg border border-border/60 px-3 py-2 text-sm font-semibold text-ink">
+            <FormSubmitButton
+              className="rounded-lg border border-border/60 px-3 py-2 text-sm font-semibold text-ink"
+              pendingLabel="Recalculating..."
+            >
               Recalculate all
-            </button>
+            </FormSubmitButton>
           </form>
         </div>
         <div className="grid gap-4">
           {budgets.map((budget) => {
             const status = getBudgetStatus(budget);
+            const ratio = budget.limit === 0 ? 0 : budget.spent / budget.limit;
+            const clampedRatio = Math.min(Math.max(ratio, 0), 1);
+            const statusChip = {
+              "on-track": "bg-positive/10 text-positive border border-positive/30",
+              "at-risk": "bg-accent/10 text-accent border border-accent/30",
+              exceeded: "bg-negative/10 text-negative border border-negative/30",
+            }[status];
+            const barFillClass =
+              status === "exceeded"
+                ? "bg-negative"
+                : status === "at-risk"
+                  ? "bg-accent"
+                  : "bg-positive";
             return (
               <div
                 key={budget.id}
@@ -93,25 +115,53 @@ export default async function BudgetsPage() {
                       {budget.period.toUpperCase()} · {formatBudgetRange(budget)}
                     </p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right flex flex-col items-end gap-1">
                     <p className="text-sm font-semibold text-ink">
                       {formatCurrency(budget.spent, "USD")} / {formatCurrency(budget.limit, budget.currency)}
                     </p>
-                    <p className="text-xs text-ink-subtle">Status: {status}</p>
+                    <span
+                      className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] ${statusChip}`}
+                    >
+                      {status.replace("-", " ")}
+                    </span>
                   </div>
+                </div>
+                <div className="mt-4">
+                  <div className="flex items-center justify-between text-xs text-ink-subtle">
+                    <span>Progress</span>
+                    <span>{Math.round(ratio * 100)}%</span>
+                  </div>
+                  <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-panel-muted">
+                    <div
+                      className={`h-full rounded-full transition-all ${barFillClass}`}
+                      style={{ width: `${clampedRatio * 100}%` }}
+                      aria-hidden
+                    />
+                  </div>
+                  {ratio > 1 ? (
+                    <p className="mt-2 text-xs text-negative">
+                      Over by {formatCurrency((ratio - 1) * budget.limit, budget.currency)}
+                    </p>
+                  ) : null}
                 </div>
                 <div className="mt-4 flex flex-wrap items-center gap-3">
                   <form action={recalcBudgetAction}>
                     <input type="hidden" name="id" value={budget.id} />
-                    <button className="rounded-lg border border-border/60 px-3 py-1 text-xs font-semibold text-ink">
+                    <FormSubmitButton
+                      className="rounded-lg border border-border/60 px-3 py-1 text-xs font-semibold text-ink"
+                      pendingLabel="Recalculating..."
+                    >
                       Recalculate
-                    </button>
+                    </FormSubmitButton>
                   </form>
                   <form action={deleteBudgetAction}>
                     <input type="hidden" name="id" value={budget.id} />
-                    <button className="rounded-lg border border-negative/50 px-3 py-1 text-xs font-semibold text-negative">
+                    <FormSubmitButton
+                      className="rounded-lg border border-negative/50 px-3 py-1 text-xs font-semibold text-negative"
+                      pendingLabel="Deleting..."
+                    >
                       Delete
-                    </button>
+                    </FormSubmitButton>
                   </form>
                   {budget.autoCalculated ? (
                     <span className="rounded-full bg-accent-muted px-3 py-1 text-xs font-medium text-accent">
@@ -139,7 +189,7 @@ export default async function BudgetsPage() {
         </div>
         <BudgetForm
           templates={templates}
-          action={saveBudgetAction}
+          action={saveBudgetFormAction}
           defaultStart={defaultStart}
           defaultEnd={defaultEnd}
         />
@@ -164,9 +214,12 @@ export default async function BudgetsPage() {
                 </div>
                 <form action={deleteTemplateAction}>
                   <input type="hidden" name="id" value={template.id} />
-                  <button className="rounded-lg border border-negative/50 px-3 py-1 text-xs font-semibold text-negative">
+                  <FormSubmitButton
+                    className="rounded-lg border border-negative/50 px-3 py-1 text-xs font-semibold text-negative"
+                    pendingLabel="Deleting..."
+                  >
                     Delete
-                  </button>
+                  </FormSubmitButton>
                 </form>
               </li>
             ))}
@@ -176,63 +229,7 @@ export default async function BudgetsPage() {
               </li>
             ) : null}
           </ul>
-          <form action={addTemplateAction} className="grid gap-3 text-xs uppercase tracking-[0.2em] text-ink-muted">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label>
-                Name
-                <input
-                  className="mt-1 w-full rounded-lg border border-border/60 bg-white px-3 py-2 text-sm normal-case"
-                  name="name"
-                  required
-                />
-              </label>
-              <label>
-                Category
-                <input
-                  className="mt-1 w-full rounded-lg border border-border/60 bg-white px-3 py-2 text-sm normal-case"
-                  name="category"
-                  required
-                />
-              </label>
-              <label>
-                Period
-                <select
-                  className="mt-1 w-full rounded-lg border border-border/60 bg-white px-3 py-2 text-sm normal-case"
-                  name="period"
-                >
-                  <option value="weekly">Weekly</option>
-                  <option value="monthly">Monthly</option>
-                  <option value="quarterly">Quarterly</option>
-                  <option value="yearly">Yearly</option>
-                </select>
-              </label>
-              <label>
-                Limit
-                <input
-                  className="mt-1 w-full rounded-lg border border-border/60 bg-white px-3 py-2 text-sm normal-case"
-                  name="limit"
-                  required
-                />
-              </label>
-              <label>
-                Currency
-                <select
-                  className="mt-1 w-full rounded-lg border border-border/60 bg-white px-3 py-2 text-sm normal-case"
-                  name="currency"
-                >
-                  <option value="USD">USD</option>
-                  <option value="EUR">EUR</option>
-                  <option value="GBP">GBP</option>
-                  <option value="JPY">JPY</option>
-                </select>
-              </label>
-            </div>
-            <div className="flex justify-end">
-              <button className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white shadow">
-                Save template
-              </button>
-            </div>
-          </form>
+          <TemplateCreateForm />
         </div>
 
         <div className="rounded-2xl border border-border/60 bg-panel p-4 shadow-sm space-y-4">
@@ -246,27 +243,44 @@ export default async function BudgetsPage() {
                 className="rounded-xl border border-border/60 bg-panel-muted p-4"
               >
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <form action={renameScenarioAction} className="flex items-center gap-2 text-sm">
-                    <input type="hidden" name="id" value={scenario.id} />
-                    <input
-                      className="rounded-lg border border-border/60 bg-white px-3 py-2 text-sm"
-                      name="name"
-                      defaultValue={scenario.name}
-                    />
-                    <button className="rounded-lg border border-border/60 px-3 py-1 text-xs font-semibold text-ink">
-                      Rename
-                    </button>
-                  </form>
+                  <ScenarioRenameForm id={scenario.id} defaultName={scenario.name} />
                   <form action={deleteScenarioAction}>
                     <input type="hidden" name="id" value={scenario.id} />
-                    <button className="rounded-lg border border-negative/50 px-3 py-1 text-xs font-semibold text-negative">
+                    <FormSubmitButton
+                      className="rounded-lg border border-negative/50 px-3 py-1 text-xs font-semibold text-negative"
+                      pendingLabel="Deleting..."
+                    >
                       Delete
-                    </button>
+                    </FormSubmitButton>
                   </form>
                 </div>
                 <p className="mt-3 text-xs text-ink-subtle">
                   Before {formatCurrency(scenario.before, "USD")} → After {formatCurrency(scenario.after, "USD")} (Δ {formatCurrency(scenario.delta, "USD")})
                 </p>
+                <div className="mt-3 space-y-2 text-xs text-ink-muted">
+                  <div>
+                    <span className="mr-2 font-medium text-ink">Before</span>
+                    <div className="mt-1 h-2 w-full rounded-full bg-panel">
+                      <div
+                        className="h-full rounded-full bg-positive"
+                        style={{ width: `${scenario.chart.before}%` }}
+                        aria-hidden
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <span className="mr-2 font-medium text-ink">After</span>
+                    <div className="mt-1 h-2 w-full rounded-full bg-panel">
+                      <div
+                        className={`h-full rounded-full ${
+                          scenario.delta > 0 ? "bg-negative" : "bg-accent"
+                        }`}
+                        style={{ width: `${scenario.chart.after}%` }}
+                        aria-hidden
+                      />
+                    </div>
+                  </div>
+                </div>
               </li>
             ))}
             {scenarioSummaries.length === 0 ? (
@@ -275,19 +289,7 @@ export default async function BudgetsPage() {
               </li>
             ) : null}
           </ul>
-          <form action={createScenarioAction} className="flex items-center gap-3 text-xs uppercase tracking-[0.2em] text-ink-muted">
-            <label className="flex-1">
-              Name
-              <input
-                className="mt-1 w-full rounded-lg border border-border/60 bg-white px-3 py-2 text-sm normal-case"
-                name="name"
-                required
-              />
-            </label>
-            <button className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white shadow">
-              Create scenario
-            </button>
-          </form>
+          <ScenarioCreateForm />
         </div>
       </section>
 

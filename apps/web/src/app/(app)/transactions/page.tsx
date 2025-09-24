@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { createTransactionAction, deleteTransactionAction, updateTransactionAction } from "@/server/actions";
 import { getTransactions, summarizeTransactions } from "@/server/queries";
 import { TransactionType } from "@/types";
 import { formatCurrency } from "@/lib/fx";
 import { suggestCategories } from "@/lib/categorize";
+import { TransactionEditForm } from "@/components/transaction-edit-form";
+import { TransactionCreateForm } from "@/components/transaction-create-form";
 
 const TYPE_OPTIONS: (TransactionType | "All")[] = ["All", "Expense", "Income"];
 export default async function TransactionsPage({
@@ -173,106 +174,12 @@ export default async function TransactionsPage({
                         <summary className="cursor-pointer text-sm font-medium text-accent">
                           Adjust
                         </summary>
-                        <form
-                          action={updateTransactionAction}
-                          className="mt-3 space-y-3"
-                        >
-                          <input type="hidden" name="id" value={txn.id} />
-                          <div className="grid gap-3 sm:grid-cols-2">
-                            <label className="text-xs uppercase tracking-[0.2em] text-ink-muted">
-                              Payee
-                              <input
-                                className="mt-1 w-full rounded-lg border border-border/60 bg-white px-3 py-2 text-sm"
-                                name="payee"
-                                defaultValue={txn.payee}
-                              />
-                            </label>
-                            <label className="text-xs uppercase tracking-[0.2em] text-ink-muted">
-                              Account
-                              <input
-                                className="mt-1 w-full rounded-lg border border-border/60 bg-white px-3 py-2 text-sm"
-                                name="account"
-                                defaultValue={txn.account}
-                              />
-                            </label>
-                            <label className="text-xs uppercase tracking-[0.2em] text-ink-muted">
-                              Category
-                              <input
-                                className="mt-1 w-full rounded-lg border border-border/60 bg-white px-3 py-2 text-sm"
-                                name="category"
-                                defaultValue={txn.category}
-                              />
-                            </label>
-                            <label className="text-xs uppercase tracking-[0.2em] text-ink-muted">
-                              Type
-                              <select
-                                className="mt-1 w-full rounded-lg border border-border/60 bg-white px-3 py-2 text-sm"
-                                name="type"
-                                defaultValue={txn.type}
-                              >
-                                <option value="Expense">Expense</option>
-                                <option value="Income">Income</option>
-                              </select>
-                            </label>
-                            <label className="text-xs uppercase tracking-[0.2em] text-ink-muted">
-                              Amount
-                              <input
-                                className="mt-1 w-full rounded-lg border border-border/60 bg-white px-3 py-2 text-sm"
-                                name="amount"
-                                defaultValue={String(txn.amount)}
-                              />
-                            </label>
-                            <label className="text-xs uppercase tracking-[0.2em] text-ink-muted">
-                              Currency
-                              <select
-                                className="mt-1 w-full rounded-lg border border-border/60 bg-white px-3 py-2 text-sm"
-                                name="currency"
-                                defaultValue={txn.currency}
-                              >
-                                <option value="USD">USD</option>
-                                <option value="EUR">EUR</option>
-                                <option value="GBP">GBP</option>
-                                <option value="JPY">JPY</option>
-                              </select>
-                            </label>
-                            <label className="text-xs uppercase tracking-[0.2em] text-ink-muted">
-                              Date
-                              <input
-                                className="mt-1 w-full rounded-lg border border-border/60 bg-white px-3 py-2 text-sm"
-                                name="date"
-                                type="date"
-                                defaultValue={txn.date.slice(0, 10)}
-                              />
-                            </label>
-                          </div>
-                          {suggestions.length ? (
-                            <p className="text-xs text-ink-subtle">
-                              Category suggestions: {suggestions.join(", ")}
-                            </p>
-                          ) : null}
-                          <div className="flex items-center justify-between gap-2 pt-2">
-                            <button
-                              type="submit"
-                              className="rounded-lg bg-accent px-3 py-2 text-xs font-semibold text-white"
-                            >
-                              Update transaction
-                            </button>
-                            <button
-                              form={`delete-${txn.id}`}
-                              type="submit"
-                              className="rounded-lg border border-negative/50 px-3 py-2 text-xs font-semibold text-negative"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </form>
-                        <form
-                          id={`delete-${txn.id}`}
-                          action={deleteTransactionAction}
-                          className="hidden"
-                        >
-                          <input type="hidden" name="id" value={txn.id} />
-                        </form>
+                        <div className="mt-3">
+                          <TransactionEditForm
+                            transaction={txn}
+                            suggestions={suggestions}
+                          />
+                        </div>
                       </details>
                     </td>
                   </tr>
@@ -294,88 +201,7 @@ export default async function TransactionsPage({
           <p className="text-sm text-ink-subtle">
             Amounts validate currency formatting and USD conversions apply automatically via the rate table.
           </p>
-          <form action={createTransactionAction} className="mt-4 grid gap-4 md:grid-cols-2">
-            <label className="text-xs uppercase tracking-[0.2em] text-ink-muted">
-              Payee
-              <input
-                className="mt-1 w-full rounded-lg border border-border/60 bg-white px-3 py-2 text-sm"
-                name="payee"
-                required
-              />
-            </label>
-            <label className="text-xs uppercase tracking-[0.2em] text-ink-muted">
-              Account
-              <input
-                className="mt-1 w-full rounded-lg border border-border/60 bg-white px-3 py-2 text-sm"
-                name="account"
-                required
-              />
-            </label>
-            <label className="text-xs uppercase tracking-[0.2em] text-ink-muted">
-              Category
-              <input
-                className="mt-1 w-full rounded-lg border border-border/60 bg-white px-3 py-2 text-sm"
-                name="category"
-                required
-              />
-            </label>
-            <label className="text-xs uppercase tracking-[0.2em] text-ink-muted">
-              Type
-              <select
-                className="mt-1 w-full rounded-lg border border-border/60 bg-white px-3 py-2 text-sm"
-                name="type"
-              >
-                <option value="Expense">Expense</option>
-                <option value="Income">Income</option>
-              </select>
-            </label>
-            <label className="text-xs uppercase tracking-[0.2em] text-ink-muted">
-              Amount
-              <input
-                className="mt-1 w-full rounded-lg border border-border/60 bg-white px-3 py-2 text-sm"
-                name="amount"
-                placeholder="120.00"
-                required
-              />
-            </label>
-            <label className="text-xs uppercase tracking-[0.2em] text-ink-muted">
-              Currency
-              <select
-                className="mt-1 w-full rounded-lg border border-border/60 bg-white px-3 py-2 text-sm"
-                name="currency"
-              >
-                <option value="USD">USD</option>
-                <option value="EUR">EUR</option>
-                <option value="GBP">GBP</option>
-                <option value="JPY">JPY</option>
-              </select>
-            </label>
-            <label className="text-xs uppercase tracking-[0.2em] text-ink-muted">
-              Date
-              <input
-                className="mt-1 w-full rounded-lg border border-border/60 bg-white px-3 py-2 text-sm"
-                type="date"
-                name="date"
-                required
-              />
-            </label>
-            <label className="text-xs uppercase tracking-[0.2em] text-ink-muted md:col-span-2">
-              Notes
-              <textarea
-                className="mt-1 w-full rounded-lg border border-border/60 bg-white px-3 py-2 text-sm"
-                name="notes"
-                rows={2}
-              />
-            </label>
-            <div className="md:col-span-2 flex justify-end">
-              <button
-                type="submit"
-                className="rounded-lg bg-accent px-5 py-2 text-sm font-semibold text-white shadow"
-              >
-                Add transaction
-              </button>
-            </div>
-          </form>
+          <TransactionCreateForm />
         </div>
       </section>
     </div>

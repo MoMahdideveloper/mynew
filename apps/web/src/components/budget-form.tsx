@@ -1,11 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { useFormState } from "react-dom";
 import { BudgetTemplate } from "@/types";
+import { ActionState, initialActionState } from "@/server/action-state";
+import { FormSubmitButton } from "@/components/form-submit-button";
+import { FormStatusMessage } from "@/components/form-status-message";
 
 interface BudgetFormProps {
   templates: BudgetTemplate[];
-  action: (formData: FormData) => Promise<void>;
+  action: (state: ActionState, formData: FormData) => Promise<ActionState>;
   defaultStart: string;
   defaultEnd: string;
 }
@@ -32,6 +36,10 @@ export function BudgetForm({ templates, action, defaultStart, defaultEnd }: Budg
   const [startDate, setStartDate] = useState(defaultStart);
   const [endDate, setEndDate] = useState(defaultEnd);
   const [autoCalculated, setAutoCalculated] = useState(true);
+  const [state, formAction] = useFormState<ActionState, FormData>(
+    action,
+    initialActionState,
+  );
 
   function applyTemplate(template: BudgetTemplate) {
     setCategory(template.category);
@@ -42,7 +50,7 @@ export function BudgetForm({ templates, action, defaultStart, defaultEnd }: Budg
   }
 
   return (
-    <form action={action} className="grid gap-4 md:grid-cols-2">
+    <form action={formAction} className="grid gap-4 md:grid-cols-2">
       <label className="text-xs uppercase tracking-[0.2em] text-ink-muted">
         Category
         <input
@@ -145,12 +153,15 @@ export function BudgetForm({ templates, action, defaultStart, defaultEnd }: Budg
             </button>
           ))}
         </div>
-        <button
-          type="submit"
-          className="rounded-lg bg-accent px-5 py-2 text-sm font-semibold text-white shadow"
-        >
-          Save budget
-        </button>
+        <div className="flex flex-col items-end gap-2">
+          <FormStatusMessage state={state} />
+          <FormSubmitButton
+            pendingLabel="Saving..."
+            className="rounded-lg bg-accent px-5 py-2 text-sm font-semibold text-white shadow"
+          >
+            Save budget
+          </FormSubmitButton>
+        </div>
       </div>
     </form>
   );

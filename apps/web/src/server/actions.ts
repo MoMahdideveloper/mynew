@@ -23,6 +23,12 @@ import {
 } from "@/server/queries";
 import { Budget, BudgetScenario, BudgetTemplate, Database } from "@/types";
 import { parseAmountInput } from "@/lib/fx";
+import {
+  ActionState,
+  failure,
+  initialActionState,
+  success,
+} from "@/server/action-state";
 
 const currencyEnum = z.enum(["USD", "EUR", "GBP", "JPY"]);
 
@@ -93,6 +99,18 @@ export async function createTransactionAction(formData: FormData) {
   await revalidateFinancePaths();
 }
 
+export async function createTransactionFormAction(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    await createTransactionAction(formData);
+    return success("Transaction added successfully.");
+  } catch (error) {
+    return failure(error, "Unable to add transaction.");
+  }
+}
+
 export async function updateTransactionAction(formData: FormData) {
   const values = transactionUpdateSchema.parse(
     Object.fromEntries(formData.entries()),
@@ -105,6 +123,18 @@ export async function updateTransactionAction(formData: FormData) {
   await updateTransaction(values.id, patch);
   await recalcAllBudgets();
   await revalidateFinancePaths();
+}
+
+export async function updateTransactionFormAction(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    await updateTransactionAction(formData);
+    return success("Transaction updated.");
+  } catch (error) {
+    return failure(error, "Unable to update transaction.");
+  }
 }
 
 export async function deleteTransactionAction(formData: FormData) {
@@ -156,6 +186,18 @@ export async function saveBudgetAction(formData: FormData) {
   await revalidateFinancePaths();
 }
 
+export async function saveBudgetFormAction(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    await saveBudgetAction(formData);
+    return success("Budget saved.");
+  } catch (error) {
+    return failure(error, "Unable to save budget.");
+  }
+}
+
 export async function deleteBudgetAction(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   if (!id) throw new Error("Budget id required");
@@ -203,6 +245,18 @@ export async function addTemplateAction(formData: FormData) {
   await revalidatePath("/budgets");
 }
 
+export async function addTemplateFormAction(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    await addTemplateAction(formData);
+    return success("Template saved.");
+  } catch (error) {
+    return failure(error, "Unable to save template.");
+  }
+}
+
 export async function deleteTemplateAction(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   if (!id) throw new Error("Template id required");
@@ -230,6 +284,18 @@ export async function createScenarioAction(formData: FormData) {
   await revalidatePath("/budgets");
 }
 
+export async function createScenarioFormAction(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    await createScenarioAction(formData);
+    return success("Scenario created.");
+  } catch (error) {
+    return failure(error, "Unable to create scenario.");
+  }
+}
+
 const scenarioRenameSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
@@ -245,6 +311,18 @@ export async function renameScenarioAction(formData: FormData) {
   );
   await writeDatabase(db);
   await revalidatePath("/budgets");
+}
+
+export async function renameScenarioFormAction(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    await renameScenarioAction(formData);
+    return success("Scenario renamed.");
+  } catch (error) {
+    return failure(error, "Unable to rename scenario.");
+  }
 }
 
 export async function deleteScenarioAction(formData: FormData) {
