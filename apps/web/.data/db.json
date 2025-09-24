@@ -1,0 +1,189 @@
+{
+  "transactions": [
+    {
+      "id": "txn-1",
+      "payee": "Pret A Manger",
+      "category": "Dining Out",
+      "account": "Chase Sapphire",
+      "type": "Expense",
+      "amount": 18.75,
+      "converted": 18.75,
+      "currency": "USD",
+      "date": "2025-09-20T21:56:58Z",
+      "status": "confirmed"
+    },
+    {
+      "id": "txn-2",
+      "payee": "Spotify",
+      "category": "Subscriptions",
+      "account": "Amex Gold",
+      "type": "Expense",
+      "amount": 9.99,
+      "converted": 9.99,
+      "currency": "USD",
+      "date": "2025-09-17T21:56:58Z",
+      "status": "confirmed"
+    },
+    {
+      "id": "txn-3",
+      "payee": "Payroll",
+      "category": "Salary",
+      "account": "HSBC Checking",
+      "type": "Income",
+      "amount": 4200,
+      "converted": 4200,
+      "currency": "USD",
+      "date": "2025-09-02T00:00:00Z",
+      "status": "confirmed"
+    },
+    {
+      "id": "txn-4",
+      "payee": "Tesco",
+      "category": "Groceries",
+      "account": "HSBC UK",
+      "type": "Expense",
+      "amount": 55.62,
+      "converted": 70.64,
+      "currency": "GBP",
+      "date": "2025-09-15T21:56:58Z",
+      "status": "confirmed"
+    },
+    {
+      "id": "txn-5",
+      "payee": "Japan Airlines",
+      "category": "Travel",
+      "account": "Amex Platinum",
+      "type": "Expense",
+      "amount": 65000,
+      "converted": 464.29,
+      "currency": "JPY",
+      "date": "2025-08-01T00:00:00Z",
+      "status": "confirmed"
+    }
+  ],
+  "budgets": [
+    {
+      "id": "bdg-1",
+      "category": "Dining Out",
+      "period": "monthly",
+      "spent": 185,
+      "limit": 300,
+      "currency": "USD",
+      "startDate": "2025-09-01T00:00:00Z",
+      "endDate": "2025-09-30T23:59:59Z",
+      "autoCalculated": true,
+      "lastRecalculated": "2025-09-23T21:56:58Z"
+    },
+    {
+      "id": "bdg-2",
+      "category": "Groceries",
+      "period": "monthly",
+      "spent": 420,
+      "limit": 600,
+      "currency": "USD",
+      "startDate": "2025-09-01T00:00:00Z",
+      "endDate": "2025-09-30T23:59:59Z",
+      "autoCalculated": true,
+      "lastRecalculated": "2025-09-23T21:56:58Z"
+    },
+    {
+      "id": "bdg-3",
+      "category": "Travel",
+      "period": "quarterly",
+      "spent": 980,
+      "limit": 1500,
+      "currency": "USD",
+      "startDate": "2025-08-01T00:00:00Z",
+      "endDate": "2025-11-30T23:59:59Z",
+      "autoCalculated": false,
+      "lastRecalculated": "2025-09-23T21:56:58Z"
+    }
+  ],
+  "drafts": [
+    {
+      "id": "draft-1",
+      "source": "email",
+      "detail": "Pret A Manger, Dining Out, USD 12.40",
+      "receivedAt": "2025-09-22T21:56:58Z"
+    },
+    {
+      "id": "draft-2",
+      "source": "upload",
+      "detail": "Starbucks, Coffee, USD 5.10",
+      "receivedAt": "2025-09-21T21:56:58Z"
+    },
+    {
+      "id": "draft-3",
+      "source": "webhook",
+      "detail": "Tesco, Groceries, GBP 23.50",
+      "receivedAt": "2025-09-19T21:56:58Z"
+    }
+  ],
+  "templates": [
+    {
+      "id": "tpl-1",
+      "name": "Baseline essentials",
+      "category": "Groceries",
+      "period": "monthly",
+      "limit": 600,
+      "currency": "USD"
+    },
+    {
+      "id": "tpl-2",
+      "name": "Commuter lunches",
+      "category": "Dining Out",
+      "period": "weekly",
+      "limit": 80,
+      "currency": "USD"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "scn-1",
+      "name": "Summer travel plan",
+      "adjustments": [
+        {
+          "budgetId": "bdg-3",
+          "delta": 200
+        },
+        {
+          "budgetId": "bdg-1",
+          "delta": -50
+        }
+      ],
+      "createdAt": "2025-09-11T21:56:58Z",
+      "updatedAt": "2025-09-20T21:56:58Z",
+      "isDraft": false
+    }
+  ],
+  "meta": {
+    "lastUpdated": "2025-09-23T21:56:58Z"
+  },
+  "categoryHints": {
+    "pret a manger": [
+      "Dining Out",
+      "Coffee"
+    ],
+    "starbucks": [
+      "Dining Out",
+      "Coffee"
+    ],
+    "tesco": [
+      "Groceries"
+    ],
+    "spotify": [
+      "Subscriptions",
+      "Entertainment"
+    ],
+    "netflix": [
+      "Subscriptions"
+    ],
+    "uber": [
+      "Transport",
+      "Travel"
+    ],
+    "payroll": [
+      "Salary"
+    ]
+  }
+}
