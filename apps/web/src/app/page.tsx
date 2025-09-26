@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
-import { AuthGateway } from "@/components/auth-gateway";
+import { AuthGatewayClient } from "@/components/auth-gateway-client";
 import { getLatestPosts } from "@/server/queries";
 import { getSession } from "@/server/auth";
 
@@ -32,7 +32,7 @@ export default async function HomePage() {
             Review transactions, monitor guardrails, and ingest drafts from any source. Plug in Strapi CMS to publish insights and keep clients in the loop.
           </p>
           <div className="grid gap-4 md:grid-cols-2">
-            <AuthGateway initialMode={isGuest ? "signup" : "signin"} />
+            <AuthGatewayClient initialMode={isGuest ? "signup" : "signin"} />
             <div className="rounded-3xl border border-border/60 bg-panel p-6 text-sm text-ink-muted">
               <p className="font-semibold text-ink">What you get</p>
               <ul className="mt-3 space-y-2">
