@@ -93,7 +93,7 @@ export function AuthGateway({
       </div>
       <div className="mt-6">
         {mode === "signin" && (
-          <form action={signInDispatch} className="space-y-4">
+          <form action={signInDispatch} method="post" className="space-y-4">
             <div>
               <label htmlFor="signin-email" className="text-sm font-medium text-ink">
                 Email
@@ -124,7 +124,7 @@ export function AuthGateway({
           </form>
         )}
         {mode === "signup" && (
-          <form action={signUpDispatch} className="space-y-4">
+          <form action={signUpDispatch} method="post" className="space-y-4">
             <div>
               <label htmlFor="signup-name" className="text-sm font-medium text-ink">
                 Name
@@ -169,7 +169,7 @@ export function AuthGateway({
           </form>
         )}
         {mode === "guest" && (
-          <form action={guestDispatch} className="space-y-4">
+          <form action={guestDispatch} method="post" className="space-y-4">
             <div>
               <label htmlFor="guest-name" className="text-sm font-medium text-ink">
                 Display name (optional)
